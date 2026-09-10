@@ -75,10 +75,9 @@ export default function TransactionLedger({
           className="mx-auto mt-16 max-w-md"
         />
       ) : (
-        // Mobile canon: below lg the ledger scrolls horizontally inside
-        // this container — the page itself never side-scrolls; ≥lg keeps
-        // the sticky header against the main scroll.
-        <section aria-label="Ledger" className="max-lg:overflow-x-auto">
+        // Include tablet widths: the sidebar leaves too little room for
+        // the year and source labels at lg. Wider screens keep the sticky header.
+        <section aria-label="Ledger" className="max-xl:overflow-x-auto">
           <table className="w-full border-separate border-spacing-0">
             <TableHeader
               density={density}
