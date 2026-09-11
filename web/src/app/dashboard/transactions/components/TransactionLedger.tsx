@@ -75,10 +75,10 @@ export default function TransactionLedger({
           className="mx-auto mt-16 max-w-md"
         />
       ) : (
-        // Include tablet widths: the sidebar leaves too little room for
-        // the year and source labels at lg. Wider screens keep the sticky header.
-        <section aria-label="Ledger" className="max-xl:overflow-x-auto">
-          <table className="w-full border-separate border-spacing-0">
+        // Only mobile uses a horizontal scrollport; desktop headers stick
+        // to the dashboard main scroll.
+        <section aria-label="Ledger" className="max-lg:overflow-x-auto">
+          <table className="w-full lg:table-fixed border-separate border-spacing-0">
             <TableHeader
               density={density}
               sticky
@@ -92,7 +92,7 @@ export default function TransactionLedger({
                 {
                   id: "source",
                   label: "Src",
-                  widthClass: "w-28 shrink-0 text-left",
+                  widthClass: "w-32 shrink-0 text-left",
                 },
                 {
                   id: "description",

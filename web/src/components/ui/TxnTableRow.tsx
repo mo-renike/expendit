@@ -117,7 +117,7 @@ export const TxnTableRow: React.FC<TxnTableRowProps> = ({
           // selects were an axe button-name critical ×50).
           aria-label={`Select transaction ${txn.description}, ${formatIso(
             txn.txn_date,
-            "d MMM",
+            showYear ? "d MMM yyyy" : "d MMM",
           )}`}
           checked={selected}
           onCheckedChange={
@@ -144,7 +144,8 @@ export const TxnTableRow: React.FC<TxnTableRowProps> = ({
         )}
       >
         <SourceIcon
-          aria-label={sourceLabel}
+          aria-label={showSourceLabel ? undefined : sourceLabel}
+          aria-hidden={showSourceLabel || undefined}
           className="h-3.5 w-3.5 shrink-0 text-text-2"
         />
         {showSourceLabel ? <span>{sourceLabel}</span> : null}
