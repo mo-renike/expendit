@@ -57,7 +57,8 @@ export const TransactionsView: React.FC = () => {
   const { activeOrg, activeOrgId } = useOrg();
   const currency = activeOrg?.currency ?? "NGN";
   const txns = useTransactionsController(activeOrgId);
-  const { items: categories } = useCategoriesController(activeOrgId);
+  const { items: categories, create: createCategory } =
+    useCategoriesController(activeOrgId);
   const savedViews = useSavedViewsController(activeOrgId);
 
   const [density, setDensity] = useState<"compact" | "comfortable">(
@@ -493,6 +494,8 @@ export const TransactionsView: React.FC = () => {
       />
 
       <TransactionInspector
+        key={activeOrgId}
+        createCategory={createCategory}
         inspector={inspector}
         closeInspector={closeInspector}
         activeTxn={activeTxn}
