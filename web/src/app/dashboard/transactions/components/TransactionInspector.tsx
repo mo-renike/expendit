@@ -11,12 +11,16 @@ import Select from "@/components/ui/Select";
 import type { useTransactionsController } from "@/controllers/use-transactions";
 import { formatMoney } from "@/lib/format";
 import type { TxnEntry } from "@/models";
-import React from "react";
+import React, { useState } from "react";
 
 import type { SelectOption } from "@/components/ui/Select";
 import type { InspectorState, TxnDraft } from "./types";
 
+import CategoryEditor, { PRESET_COLORS } from "@/components/ui/CategoryEditor";
+import type { useCategoriesController } from "@/controllers/use-categories";
+
 interface TransactionInspectorProps {
+  createCategory: ReturnType<typeof useCategoriesController>["create"];
   inspector: InspectorState;
   closeInspector: () => void;
   activeTxn: TxnEntry | undefined;
@@ -39,6 +43,7 @@ interface TransactionInspectorProps {
 }
 
 export default function TransactionInspector({
+  createCategory,
   inspector,
   closeInspector,
   activeTxn,
@@ -56,12 +61,13 @@ export default function TransactionInspector({
   splitTxn,
   draftError,
 }: TransactionInspectorProps) {
+  const [creatingCategory, setCreatingCategory] = useState(false);
   return (
     <>
       {/* Record inspector (MI-11) + manual "new transaction" path */}
       <Inspector
         open={inspector.kind === "record" || inspector.kind === "new"}
-        onClose={closeInspector}
+        onClose={creatingCategory ? () => {} : closeInspector}
         title={inspector.kind === "new" ? "New transaction" : "Transaction"}
         variant="record"
         footer={
@@ -159,15 +165,26 @@ export default function TransactionInspector({
           </div>
           <FormRow label="Category" required>
             {() => (
-              <Select
-                options={categorySelectOptionsByDirection[draft.direction]}
-                value={draft.category_id}
-                onValueChange={(value) =>
-                  setDraft((prev) => ({ ...prev, category_id: value }))
-                }
-                placeholder="Pick a category"
-                searchable
-              />
+              <div className="space-y-2">
+                <Select
+                  aria-label="Category"
+                  options={categorySelectOptionsByDirection[draft.direction]}
+                  value={draft.category_id}
+                  onValueChange={(value) =>
+                    setDraft((prev) => ({ ...prev, category_id: value }))
+                  }
+                  placeholder="Pick a category"
+                  searchable
+                  trailingAction={
+                    inspector.kind === "new"
+                      ? {
+                          label: "Create category",
+                          onSelect: () => setCreatingCategory(true),
+                        }
+                      : undefined
+                  }
+                />
+              </div>
             )}
           </FormRow>
           <FormRow label="Date">
@@ -236,6 +253,25 @@ export default function TransactionInspector({
           ) : null}
         </div>
       </Inspector>
+      {creatingCategory && inspector.kind === "new" ? (
+        <CategoryEditor
+          initialDraft={{
+            name: "",
+            type: draft.direction,
+            color: PRESET_COLORS[0],
+          }}
+          createCategory={createCategory}
+          onSaved={(category) => {
+            setDraft((prev) => ({
+              ...prev,
+              direction: category.type,
+              category_id: category.id,
+            }));
+            setToast("Category created");
+          }}
+          onClose={() => setCreatingCategory(false)}
+        />
+      ) : null}
     </>
   );
 }
