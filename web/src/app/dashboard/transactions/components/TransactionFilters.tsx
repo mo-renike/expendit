@@ -9,7 +9,7 @@ import Select from "@/components/ui/Select";
 import type { useSavedViewsController } from "@/controllers";
 import type { useTransactionsController } from "@/controllers/use-transactions";
 import type { TxnFilters } from "@/models";
-import { Filter, RotateCcw, X } from "lucide-react";
+import { Filter, X } from "lucide-react";
 import React, { useEffect, useRef } from "react";
 import { cn } from "@/lib/cn";
 
