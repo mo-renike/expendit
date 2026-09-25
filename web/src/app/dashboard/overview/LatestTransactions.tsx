@@ -2,9 +2,9 @@ import React from "react";
 import Link from "next/link";
 import type { Category, TxnEntry } from "@/models";
 import TableHeader from "@/components/ui/TableHeader";
-import OverviewTxnTableRow from "../OverviewTxnTableRow";
 import { FALLBACK_CATEGORY_COLOR } from "./constants";
 import { OverviewCard } from "./OverviewCard";
+import OverviewTxnTableRow from "./OverviewTxnTableRow";
 
 interface LatestTransactionsProps {
   transactions: TxnEntry[];
