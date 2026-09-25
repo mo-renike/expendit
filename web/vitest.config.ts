@@ -15,6 +15,10 @@ export default defineConfig({
     setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
     exclude: ["node_modules/**", "src/legacy/**", "e2e/**"],
+    // The component suite uses jsdom heavily. Limiting workers avoids CPU
+    // contention that can make otherwise-fast RTL queries exceed Vitest's
+    // default 5s timeout when the complete suite runs.
+    maxWorkers: 2,
     env: {
       NEXT_PUBLIC_TEST_MODE: "1",
     },
