@@ -37,7 +37,7 @@ test.describe("public home `/` (Part A)", () => {
     await expect(
       page.getByText("For developers — come build the hard parts"),
     ).toBeVisible();
-    await expect(page.getByText("api · Go/Gin")).toBeVisible();
+    await expect(page.getByText("api · Go/Node/Py")).toBeVisible();
     await expect(
       page.getByText("Self-host: your books never leave your building"),
     ).toBeVisible();
@@ -337,7 +337,7 @@ test.describe("public home `/` (Part A)", () => {
   });
 
   // A8c tabbed snippet (Figma 474:2): tab switch is instant with no layout
-  // shift, the shared MongoDB/Redis caption persists in both tab states,
+  // shift, the shared infrastructure caption persists in both tab states,
   // copy targets the ACTIVE tab's full two-line block, and the block fits
   // the 1440/390 container canons.
   test("A8a self-host tabs — helm copy + caption persists", async ({
@@ -350,7 +350,7 @@ test.describe("public home `/` (Part A)", () => {
     const block = page.getByTestId("selfhost-snippet");
     await block.scrollIntoViewIfNeeded();
     const caption = block.getByText(
-      "Compose ships MongoDB + Redis — the Helm chart expects reachable instances (MONGODB_URL, REDIS_URL).",
+      "Compose ships Postgres, Kafka, Redis + MinIO — the Helm chart expects reachable instances (DATABASE_URL, KAFKA_BROKERS).",
     );
     await expect(caption).toBeVisible();
     const tablist = block.getByRole("tablist", { name: "Install method" });
@@ -395,7 +395,7 @@ test.describe("public home `/` (Part A)", () => {
 // −2.2px), Display/32 Bold section headings (32/38, −1% = −0.32px — the
 // same metrics StatCard pins), Title/20 Semi Bold pillar titles (20/26,
 // −0.05px) and Body/14 Regular captions (14/20). Regression lock from the
-// fleet font-weight audit (2026-07-20).
+// font-weight audit (2026-07-20).
 test.describe("type contract — Figma Home frame roles", () => {
   test("per-role computed weight/size/line-height/tracking match the styles", async ({
     page,

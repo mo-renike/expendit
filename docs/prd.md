@@ -12,12 +12,12 @@
 ## 1. Product definition
 
 Expendit is a financial-analysis and expense-intelligence product: it turns raw
-financial data — bank statements, receipts, CSV exports — into structured,
+financial data, bank statements, receipts, CSV exports, into structured,
 categorized, anomaly-checked reports of spending and cash movement, for
 individuals, SMEs, and operational teams. **[PRD]**
 
 `expendit.cuesoft.io` is both the landing page and the application entry point.
-**[PRD §1.1]** Unlike apparule (whose web property fronts a mostly-unbuilt
+**[PRD §1.1]** Unlike the sibling products (whose web property fronts a mostly-unbuilt
 platform), Expendit's core intelligence loop **already exists in this repo**:
 upload → parse (CSV/PDF/receipt image) → AI categorization → duplicate &
 anomaly detection → reviewable staging → confirm into the ledger. The PRD phase
@@ -45,7 +45,7 @@ auto-created personal org; any business entity that wants statement capture
 | ID | Requirement | Priority | Current state **[Current]** | Gap |
 | --- | --- | --- | --- | --- |
 | EXP-001 | Report Preview Landing — visitors see example insights/charts without authenticating | Must | Landing page exists (hero, services, features, how-it-works, open-source, contact sections) | Add an *example report/chart preview* section with demo data; must never use real personal bank data **[PRD §5]** |
-| EXP-002 | Universal File Upload — bank statements (PDF) + CSVs | Must | **Implemented**: `POST /import/upload` accepts CSV/tabular, PDF (text-extraction → AI → regex fallback), and receipt images (JPG/PNG/WEBP/HEIC via AI vision) | Hardening: size limits, async processing (see architecture.md §4.2), clearer failure surfaces |
+| EXP-002 | Universal File Upload — bank statements (PDF) + CSVs | Must | **Implemented** (system-design.md §6.1): `POST /import` on api/common authorizes and returns an upload ticket; `POST /uploads` on api/statements takes CSV/XLSX/TXT, PDF (text extraction → AI → regex fallback) and receipt images (JPG/PNG/WEBP/HEIC via AI vision), ≤ 15 MB; api/analytics decides over Kafka | Typed failure surfaces done; statement PDFs/images await AI table extraction |
 | EXP-003 | AI Categorization — grouping, user correction, anomaly alerts | Should | **Implemented**: categorization engine + Groq→Gemini enhancer; per-transaction category correction endpoint; 4 anomaly types (large transaction, spending spike, abnormal category, duplicate charge) persisted per job | Alert *UX* (surfacing anomalies beyond the import screen); correction feedback loop into the engine **[Proposed]** |
 | EXP-004 | Summary Reports — downloadable financial summaries & cash-movement reports | Must | Summaries computed (totals, net cash flow, by-category, monthly trends, AI narrative) but only served as JSON; 3 chart aggregation endpoints | **Downloadable artifact generation (PDF/CSV) is missing** — the main Must-gap |
 | EXP-005 | Privacy Hub — disclosure on retention, storage, deletion rights | Must | Nothing | New page + `privacy.cuesoft.io` clause link; pairs with USR-001/002 below |
@@ -56,7 +56,7 @@ auto-created personal org; any business entity that wants statement capture
 | --- | --- | --- |
 | ECO-AUTH | Identity via `account.cuesoft.io` | Same external dependency as the other products (D1). Current: own JWT auth (signup/signin/Google/reset, rate-limited) — a solid interim. |
 | ECO-SUPPORT | Disputes/technical issues route to `clients.cuesoft.io` | Link-out from dashboard/settings. |
-| ECO-ANALYTICS | "Upload Success" and "Report Generation" events via Upstat | Depends on Upstat event API (D2). Events must be **privacy-compliant**: counters only, never financial payloads. **[PRD §4.2]** |
+| ECO-ANALYTICS | "Upload Success" and "Report Generation" events via the monitoring service | Depends on the monitoring service's event API (D2). Events must be **privacy-compliant**: counters only, never financial payloads. **[PRD §4.2]** |
 
 ### 3.3 Derived user-rights requirements **[PRD §7 made explicit]**
 
@@ -92,14 +92,14 @@ auto-created personal org; any business entity that wants statement capture
 | Demo data | Landing previews and demos must use synthetic data only **[PRD §5]** |
 | Privacy clause | Adhere to the Expendit-specific clause in `privacy.cuesoft.io` **[PRD §7]** (content dependency D3) |
 | User control | USR-001/002 above — export + full deletion, visibly reachable **[PRD §7]** |
-| AI processing disclosure | Cloud: statements/receipts are processed by **Vertex AI within GCP** (X-4 — no third-party AI vendors); self-host BYO Groq/Gemini keys disclosed as such **[Current fact that §7 disclosure must cover — Proposed to make explicit in the privacy hub]** |
+| AI processing disclosure | Cloud: statements/receipts are processed by **Vertex AI within GCP** (X-4, no third-party AI vendors); self-host BYO Groq/Gemini keys disclosed as such **[Current fact that §7 disclosure must cover, Proposed to make explicit in the privacy hub]** |
 
 ## 7. Success metrics
 
 | Metric | Source | Requirement |
 | --- | --- | --- |
-| Upload Success | Upstat event on completed import job | ECO-ANALYTICS **[PRD]** |
-| Report Generation | Upstat event on report/export creation | ECO-ANALYTICS **[PRD]** |
+| Upload Success | Monitoring service event on completed import job | ECO-ANALYTICS **[PRD]** |
+| Report Generation | Monitoring service event on report/export creation | ECO-ANALYTICS **[PRD]** |
 | Import → confirm conversion | api/common (jobs confirmed ÷ jobs created) | **[Proposed]** — measures trust in AI staging |
 | Correction rate per import | api/common | **[Proposed]** — categorization quality signal |
 
@@ -118,7 +118,7 @@ auto-created personal org; any business entity that wants statement capture
 
 ---
 
-## 9. Scope expansion (2026-07-16) **[Directive]**
+## 9. Scope expansion (2026-07-16) **[Specified]**
 
 Look and feel: **brex.com** ([design.md](design.md)). Three new capability
 pillars, page-level breakdowns in [pages.md](pages.md):
@@ -127,17 +127,17 @@ pillars, page-level breakdowns in [pages.md](pages.md):
    *or link accounts*; synced transactions flow through the same staged-review
    pipeline. Aggregator: **Mono, ratified E-1** (Okra wound down; Plaid layers
    on later).
-2. **Company financial records** (CMP-001…003) — company orgs upload balance
+2. **Company financial records** (CMP-001…003), company orgs upload balance
    sheets / income statements / cash-flow statements; a normalized line-item
    model feeds a ratio engine: liquidity (current/quick/cash), solvency
    (debt-to-equity, debt ratio, interest coverage), profitability
-   (margins/ROA/ROE), efficiency (turnovers) — every ratio with a formula
+   (margins/ROA/ROE), efficiency (turnovers), every ratio with a formula
    trace back to line items.
 3. **Taxes** (TAX-001…003) — calculate PIT/CIT/VAT (jurisdiction profile,
    NG-first **[Proposed]**) and **file**: v1 generates filing-ready documents
    with guided handoff; v2 adds direct e-filing where APIs/partners exist.
 
-Platform structure **[Directive]**: public home page (shared open-source-site
+Platform structure **[Specified]**: public home page (shared open-source-site
 pattern: Discord, GitHub, preview link, Try Cloud / Self Host CTAs) + dashboard
 + eventual mobile parity (receipt capture first). Docs on GitBook (Git-synced
 from `docs/`); API reference via Scalar. New open questions: aggregator

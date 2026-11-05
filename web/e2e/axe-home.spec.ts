@@ -10,7 +10,7 @@ import { expect, test } from "@playwright/test";
 
 // The ARIA classes this gate locks at ANY impact level: broken IDREFs /
 // required attributes (the CodeSnippet regression family) and unnamed
-// buttons (the checkbox/icon-button family, fleet P6).
+// buttons (the checkbox/icon-button family).
 const LOCKED_RULES = [
   "aria-valid-attr-value",
   "aria-valid-attr",
@@ -29,7 +29,7 @@ test("home has zero critical axe violations (ARIA IDREF + name lock)", async ({
   // covers the full page: the IO gates fire on approach, so walk the
   // sections (an instant jump to the bottom would skip #demo), then
   // return to the top.
-  await page.locator("#demo").scrollIntoViewIfNeeded();
+  await page.locator("#demo [data-deferred]").scrollIntoViewIfNeeded();
   await expect(
     page.getByRole("table", { name: "Demo transactions" }),
   ).toBeVisible();

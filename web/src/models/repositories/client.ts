@@ -5,6 +5,7 @@
  * envelope {"error": {code, message, details}} into ApiError.
  */
 
+import { getAuthProvider } from "@/auth";
 import { env } from "@/config/env";
 
 export class ApiError extends Error {
@@ -31,6 +32,8 @@ export interface RequestOptions {
   orgId?: string;
   /** Idempotency key for upload/purge/report creation (api.md §4). */
   idempotencyKey?: string;
+  /** Extra headers, e.g. Upload-Ticket on POST /uploads (system-design.md §6.1). */
+  headers?: Record<string, string>;
   query?: Record<string, string | number | boolean | undefined>;
   signal?: AbortSignal;
 }
@@ -46,14 +49,29 @@ const buildUrl = (path: string, query?: RequestOptions["query"]): string => {
   return qs ? `${url}?${qs}` : url;
 };
 
+/** TEST_MODE bearer only; the real session travels as an HttpOnly cookie. */
+const bearerToken = async (): Promise<string | null> => {
+  try {
+    return await getAuthProvider().getBearerToken();
+  } catch {
+    return null;
+  }
+};
+
 const request = async <T>(
   method: string,
   path: string,
   body?: unknown,
   options: RequestOptions = {},
 ): Promise<T> => {
-  const headers: Record<string, string> = {};
-  if (options.orgId) headers["X-Org-Id"] = options.orgId;
+  const headers: Record<string, string> = { ...options.headers };
+  // The upload gateway authenticates by ticket only (S-5): requests that
+  // carry an Upload-Ticket get no session or org header.
+  if (!headers["Upload-Ticket"]) {
+    const token = await bearerToken();
+    if (token) headers.Authorization = `Bearer ${token}`;
+    if (options.orgId) headers["X-Org-Id"] = options.orgId;
+  }
   if (options.idempotencyKey)
     headers["Idempotency-Key"] = options.idempotencyKey;
 
@@ -70,6 +88,7 @@ const request = async <T>(
     headers,
     body: payload,
     signal: options.signal,
+    credentials: "include",
   });
 
   if (response.status === 204) return undefined as T;
